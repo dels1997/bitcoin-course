@@ -4,6 +4,7 @@
 
 from hash import *
 import math
+from functools import cmp_to_key
 
 def merkle_parent(hash1, hash2):
     '''Takes the binary hashes and calculates the hash256'''
@@ -48,6 +49,22 @@ def merkle_root(hashes):
         current_level = merkle_parent_level(current_level)
     # return the 1st item of the current level
     return current_level[0]
+
+
+def allHashes(hashes):
+    '''Takes a list of binary hashes and returns the list of hashes of total Merkle tree
+    '''
+    # current level starts as hashes
+    current_level = hashes
+    ret = current_level
+    # loop until there's exactly 1 element
+    while len(current_level) > 1:
+        # current level becomes the merkle parent level
+        current_level = merkle_parent_level(current_level)
+        ret = current_level + ret
+    # return the 1st item of the current level
+    return ret
+
 
 class MerkleProof:
     def __init__(self, hashesOfInterest, nrLeaves=None, flags=None, hashes=None):
@@ -96,7 +113,6 @@ class MerkleTree:
         return items          
 
 
-
     def generate_proof(self,hashesOfInterest):
         '''
         HW1: Implement the function that generates the flag bits for hashesOfInterest in the received list
@@ -105,7 +121,89 @@ class MerkleTree:
         Returns an object of class MerkleProof
         !!!hashesOfInterest are always assumed to be leaves of the Merkle tree!!!
         '''
-        return True
+        for hashOfInterest in hashesOfInterest:
+            if hashOfInterest not in self.hashes:
+                # we print hex hash for easier error identification
+                raise RuntimeError(
+                    "Hash '{missing_hash}' is not a leaf!"
+                    .format(missing_hash = hashOfInterest.hex())
+                )
+        
+        l = len(self.hashes)
+        nrLeaves = l if l % 2 == 0 else l + 1
+        height = int(math.log2(nrLeaves))      
+        
+        locationsOfInterest = [self.hashes.index(hashOfInterest) for hashOfInterest in hashesOfInterest]
+
+        indicesOfInterest = [2 ** height + locationOfInterest for locationOfInterest in locationsOfInterest]
+        
+        indexFlagDict = {}
+        
+        def addSubtreeIndicesToDict(index, flag, indices, ifdict):
+            if index not in indexFlagDict: indexFlagDict[index] = flag
+            else:
+                if flag == 1 and indexFlagDict[index] == 0: indexFlagDict[index] = 1
+                return
+            if index == 1: return
+        
+            if index % 2 == 0:
+                if (index + 1) in indices or (index + 1) in ifdict:
+                    pass
+                else:
+                    addSubtreeIndicesToDict(index + 1, 0, indices, ifdict)
+            elif index % 2 == 1:
+                if (index - 1) in indices or (index - 1) in ifdict:
+                    pass
+                else:
+                    addSubtreeIndicesToDict(index - 1, 0, indices, ifdict)
+            addSubtreeIndicesToDict(math.floor(index / 2), 1, indices, ifdict)
+                        
+        for indexOfInterest in indicesOfInterest:
+            addSubtreeIndicesToDict(indexOfInterest, 1, indicesOfInterest, indexFlagDict)
+        
+        indexFlagDict = {key:indexFlagDict[key] for key in sorted(indexFlagDict.keys())}
+        
+        def nodeLevel(index):
+            return int(math.log2(index))
+        
+        def reduceToSameLevel(a, b):
+            larger = 'c'
+            while nodeLevel(a) != nodeLevel(b):
+                if nodeLevel(a) > nodeLevel(b):
+                    a = math.floor(a / 2)
+                    larger = 'a'
+                elif nodeLevel(a) < nodeLevel(b):
+                    b = math.floor(b / 2)
+                    larger = 'b'
+                else: break
+            return a + (1 if a == b and larger == 'a' else 0), b + (1 if a == b and larger == 'b' else 0)
+
+        def nodeIndexCmp(a, b):
+            if a == 1: return -1
+            if b == 1: return 1
+            
+            a, b = reduceToSameLevel(a, b)
+            return -1 if a < b else 1
+            
+        cmp_key = cmp_to_key(nodeIndexCmp)
+        keys = [k for k in indexFlagDict.keys()]
+        keys.sort(key=cmp_key)
+        indexFlagDict = {k:indexFlagDict[k] for k in keys}
+                
+        # check flagging and finding corresponding subtrees
+        #for key, value in indexFlagDict.items():
+        #    print(key, value)
+
+        flags = [value for key, value in indexFlagDict.items()]
+        
+        listOfAllHashes = allHashes(self.hashes)
+        hashes = [
+            listOfAllHashes[key - 1] for key, value in indexFlagDict.items()
+            if value == 0 or key in indicesOfInterest
+        ]
+        
+        return MerkleProof(hashesOfInterest, nrLeaves, flags, hashes)
+
 
 class MerkleProof:
     def __init__(self, hashesOfInterest, nrLeaves = None, flags = None, hashes = None):
@@ -115,23 +213,25 @@ class MerkleProof:
         self.hashes = hashes
 
 
-
-class SortedTree:
+class SortedTree(MerkleTree):
     '''
     This will be a sorted Merkle Tree which will allow a proof of non-inclusion
     Copy/paste any method from the other classes that you will need
-
     '''
+    def __init__(self, hashes):
+        hashes_hex = [h.hex() for h in hashes]
+        hashes_hex.sort()
+        self.hashes = [bytes.hex(h) for h in hashes_hex]
+        self.root = merkle_root(self.hashes)
 
     def proof_of_non_inclusion(self,hash):
         '''
         HW1: Implement the function that generates a proof of non inclusion for a single hash
         !!!the hash is assumed to be a leaf of the Merkle tree!!! 
         '''
-        return True
+        return generate_proof([hash])
 
 
-	
 class PartialMerkleTree:
 
     def __init__(self, total):
@@ -253,8 +353,10 @@ class PartialMerkleTree:
             if flag_bit != 0:
                 raise RuntimeError('flag bits not all consumed')
 
+
 def verify_inclusion(hashesOfInterest, merkleRoot, proof):
-    ''' Verifies if hashesOfInterest belong to a Merkle Tree with the root merkleRoot using the proof
+    '''
+    Verifies if hashesOfInterest belong to a Merkle Tree with the root merkleRoot using the proof
     '''
     leaves = proof.nrLeaves
     flags = proof.flags
@@ -300,25 +402,38 @@ raw_hashes = [bytes.fromhex(h) for h in hex_hashes]
 
 tree = MerkleTree(raw_hashes)
 
-flags=[1,0,1,1,0,1,1,0,1,1,0,1,0]
-hashes = ["6382df3f3a0b1323ff73f4da50dc5e318468734d6054111481921d845c020b93",
-"3b67006ccf7fe54b6cb3b2d7b9b03fb0b94185e12d086a42eb2f32d29d535918",
-"9b74f89fa3f93e71ff2c241f32945d877281a6a50a6bf94adac002980aafe5ab",
-"b3a92b5b255019bdaf754875633c2de9fec2ab03e6b8ce669d07cb5b18804638",
-"b5c0b915312b9bdaedd2b86aa2d0f8feffc73a2d37668fd9010179261e25e263",
-"c9d52c5cb1e557b92c84c52e7c4bfbce859408bedffc8a5560fd6e35e10b8800",
-"8636b7a3935a68e49dd19fc224a8318f4ee3c14791b3388f47f9dc3dee2247d1"
-]
+'''r_hashes = [bytes.fromhex(h) for h in hashes]'''
 
-
-r_hashes = [bytes.fromhex(h) for h in hashes]
-
-hashesOfInterest = ["9b74f89fa3f93e71ff2c241f32945d877281a6a50a6bf94adac002980aafe5ab",
-"c9d52c5cb1e557b92c84c52e7c4bfbce859408bedffc8a5560fd6e35e10b8800"
+hashesOfInterest = [
+    "9b74f89fa3f93e71ff2c241f32945d877281a6a50a6bf94adac002980aafe5ab",
+    "c9d52c5cb1e557b92c84c52e7c4bfbce859408bedffc8a5560fd6e35e10b8800"
 ]
 
 r_interest = [bytes.fromhex(h) for h in hashesOfInterest]
 
-proof = MerkleProof(r_interest,16,flags,r_hashes)
+#proof = MerkleProof(r_interest,16,flags,r_hashes)
+# provided data for testing:
+flags_check = [1,0,1,1,0,1,1,0,1,1,0,1,0]
+hashes_check = [
+    "6382df3f3a0b1323ff73f4da50dc5e318468734d6054111481921d845c020b93",
+    "3b67006ccf7fe54b6cb3b2d7b9b03fb0b94185e12d086a42eb2f32d29d535918",
+    "9b74f89fa3f93e71ff2c241f32945d877281a6a50a6bf94adac002980aafe5ab",
+    "b3a92b5b255019bdaf754875633c2de9fec2ab03e6b8ce669d07cb5b18804638",
+    "b5c0b915312b9bdaedd2b86aa2d0f8feffc73a2d37668fd9010179261e25e263",
+    "c9d52c5cb1e557b92c84c52e7c4bfbce859408bedffc8a5560fd6e35e10b8800",
+    "8636b7a3935a68e49dd19fc224a8318f4ee3c14791b3388f47f9dc3dee2247d1"
+]
 
-print(verify_inclusion(r_interest, tree.root, proof))
+
+proof = tree.generate_proof(r_interest)
+print('hashes of interest: ')
+for hoi in proof.hashesOfInterest:
+    print(hoi.hex())
+print("\nnumber of leaves: {nrl}".format(nrl=proof.nrLeaves))
+print('\nflags: {flgs}'.format(flgs=proof.flags))
+assert proof.flags == flags_check
+print('\nhashes: ')
+for h in proof.hashes:
+    print(h.hex())
+assert [ph.hex() for ph in proof.hashes] == hashes_check
+print('\nverify_inclusion: {ver}'.format(ver=verify_inclusion(r_interest, tree.root, proof)))
