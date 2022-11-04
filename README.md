@@ -2,6 +2,7 @@
  Repository containing (at least) homework assignments and the final project for course Programming for Contemporary Processors in academic year 2022/2023.
 ----------------------------------------------------------------------------------------------------------------------------
 HW1 Bitcoin_Merkle.py script output:
+
 hashes of interest: 
 9b74f89fa3f93e71ff2c241f32945d877281a6a50a6bf94adac002980aafe5ab
 c9d52c5cb1e557b92c84c52e7c4bfbce859408bedffc8a5560fd6e35e10b8800
