@@ -146,12 +146,12 @@ class MerkleTree:
                 return
             if index == 1: return
         
-            if index % 2 == 0:
+            if index % 2 == 0: # node of (index + 1) always exists in this case
                 if (index + 1) in indices or (index + 1) in ifdict:
                     pass
                 else:
                     addSubtreeIndicesToDict(index + 1, 0, indices, ifdict)
-            elif index % 2 == 1:
+            elif index % 2 == 1: # node of (index - 1) always exists in this case
                 if (index - 1) in indices or (index - 1) in ifdict:
                     pass
                 else:
@@ -221,7 +221,9 @@ class SortedTree(MerkleTree):
     def __init__(self, hashes):
         hashes_hex = [h.hex() for h in hashes]
         hashes_hex.sort()
-        self.hashes = [bytes.hex(h) for h in hashes_hex]
+        print('sorted hashes:')
+        for h in hashes_hex: print(h)
+        self.hashes = [bytes.fromhex(h) for h in hashes_hex]
         self.root = merkle_root(self.hashes)
 
     def proof_of_non_inclusion(self,hash):
@@ -229,7 +231,18 @@ class SortedTree(MerkleTree):
         HW1: Implement the function that generates a proof of non inclusion for a single hash
         !!!the hash is assumed to be a leaf of the Merkle tree!!! 
         '''
-        return generate_proof([hash])
+        if hash.hex() < self.hashes[0].hex():
+            return super().generate_proof([self.hashes[0],self.hashes[1]])
+        if hash.hex() > self.hashes[-1].hex():
+            return super().generate_proof([self.hashes[-2],self.hashes[-1]])   
+        if hash in self.hashes:
+            return super().generate_proof([hash])
+        self.hashes.reverse()
+        smaller_index = next(i for i,v in enumerate(self.hashes) if v.hex() < hash.hex())
+        self.hashes.reverse()
+        smaller_index = len(self.hashes) - smaller_index - 1
+        
+        return super().generate_proof([self.hashes[smaller_index], self.hashes[smaller_index + 1]])
 
 
 class PartialMerkleTree:
@@ -373,8 +386,25 @@ def verify_non_inclusion(hash, merkleRoot, proof):
     The method receives a hash, a Merkle root, and a proof that hash does not belong to this Merkle root
     the proof is of type MerkleProof
     '''
-    return True
+    '''
+    Since proof_of_non_inclusion() (presumed to be an argument here)
+    is a method of class SortedTree, we suppose that the tree
+    is sorted in this part of the problem. Furthermore, hash is assumed to be
+    a leaf, as per the same method description.
+    '''
+    leaves = proof.nrLeaves
+    flags = proof.flags
+    hashes = proof.hashes
 
+    tree = PartialMerkleTree(leaves)
+    tree.populate_tree(flags,hashes)
+    
+    if len(proof.hashesOfInterest) is 1:
+        return False
+    
+    if (tree.root() == merkleRoot):
+        return True
+    return False
 	
 ## Data for testing:
 
@@ -437,3 +467,23 @@ for h in proof.hashes:
     print(h.hex())
 assert [ph.hex() for ph in proof.hashes] == hashes_check
 print('\nverify_inclusion: {ver}'.format(ver=verify_inclusion(r_interest, tree.root, proof)))
+
+stree = SortedTree(raw_hashes)
+hex_hashes_s = hex_hashes
+hex_hashes_s.sort()
+sorted_raw_hashes = [bytes.fromhex(h) for h in hex_hashes_s]
+
+print('\nverify_non_inclusion() for all leaves:')
+for hh in hex_hashes:
+    nproof = stree.proof_of_non_inclusion(bytes.fromhex(hh))
+    print(verify_non_inclusion(bytes.fromhex(hh), merkle_root(sorted_raw_hashes), nproof))
+   
+print('\nverify_non_inclusion() for hashes_check:')
+for hh in hashes_check:
+    nproof = stree.proof_of_non_inclusion(bytes.fromhex(hh))
+    print(verify_non_inclusion(bytes.fromhex(hh), merkle_root(sorted_raw_hashes), nproof))
+
+print('\nverify_non_inclusion() that should return True:')
+h = '9836b7a3935a68e49dd19fc224a8318f4ee3c14791b3388f47f9dc3dee2247d1'
+nproof = stree.proof_of_non_inclusion(bytes.fromhex(h))
+print(verify_non_inclusion(bytes.fromhex(h), merkle_root(sorted_raw_hashes), nproof))
