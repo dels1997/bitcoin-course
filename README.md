@@ -1,7 +1,7 @@
 # pcp
  Repository containing (at least) homework assignments and the final project for course Programming for Contemporary Processors in academic year 2022/2023.
 ----------------------------------------------------------------------------------------------------------------------------
-HW1 Bitcoin_Merkle.py script output:
+## HW1 Bitcoin_Merkle.py script output:
 
 hashes of interest: 
 9b74f89fa3f93e71ff2c241f32945d877281a6a50a6bf94adac002980aafe5ab
@@ -11,7 +11,8 @@ number of leaves: 16
 
 flags: [1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 0]
 
-hashes: 
+hashes:
+
 6382df3f3a0b1323ff73f4da50dc5e318468734d6054111481921d845c020b93
 3b67006ccf7fe54b6cb3b2d7b9b03fb0b94185e12d086a42eb2f32d29d535918
 9b74f89fa3f93e71ff2c241f32945d877281a6a50a6bf94adac002980aafe5ab
@@ -21,7 +22,9 @@ c9d52c5cb1e557b92c84c52e7c4bfbce859408bedffc8a5560fd6e35e10b8800
 8636b7a3935a68e49dd19fc224a8318f4ee3c14791b3388f47f9dc3dee2247d1
 
 verify_inclusion: True
+
 sorted hashes:
+
 457743861de496c429912558a106b810b0507975a49773228aa788df40730d41
 507ccae5ed9b340363a0e6d765af148be9cb1c8766ccc922f83e4ae681658308
 5573c8ede34936c29cdfdfe743f7f5fdfbd4f54ba0705259e62f39917065cb9b
@@ -68,4 +71,5 @@ True
 
 verify_non_inclusion() that should return True:
 True
+
 ----------------------------------------------------------------------------------------------------------------------------
