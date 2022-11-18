@@ -73,7 +73,7 @@ verify_non_inclusion() that should return True:
 True
 
 ----------------------------------------------------------------------------------------------------------------------------
-## HW2 hw2.py script output:
+## HW2 hw2.py script output (with newlines added for readability):
 
 Uncompressed SEC format:  04852e3a8f4e64ee65624872095c466dccd460dcc85d4bab56ec2625b920677014d4895949efe57596ee4ed9bad45fb24b2a9df7686bb700e672f62a56860c1380
 
