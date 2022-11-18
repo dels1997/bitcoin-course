@@ -76,11 +76,17 @@ True
 ## HW2 hw2.py script output:
 
 Uncompressed SEC format:  04852e3a8f4e64ee65624872095c466dccd460dcc85d4bab56ec2625b920677014d4895949efe57596ee4ed9bad45fb24b2a9df7686bb700e672f62a56860c1380
+
 Compressed sec format:  02852e3a8f4e64ee65624872095c466dccd460dcc85d4bab56ec2625b920677014
+
 Raw signature:  Signature(1b8702e527b5410464649721cffdead50944c251fb09727f55e2c54e1e56def,2a44f56715d0d9d4fa086539d261219f415fb474a2b74136c43ca462a862eda9)
+
 DER signature:  3044022001b8702e527b5410464649721cffdead50944c251fb09727f55e2c54e1e56def02202a44f56715d0d9d4fa086539d261219f415fb474a2b74136c43ca462a862eda9
+
 Testnet address:  mnWaVwJYCFKK3nCriPFfHD9wLKhz9RVbcy
+
 Mainnet address:  17zdCtDZPDt4GfjEzpHHTHwcUL7HBW6k2a
 
 (material used for solution: https://www.oreilly.com/library/view/programming-bitcoin/9781492031482/ch04.html)
+
 ----------------------------------------------------------------------------------------------------------------------------
