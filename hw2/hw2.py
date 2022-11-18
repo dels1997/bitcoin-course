@@ -2,7 +2,8 @@ from random import randint
 
 import hmac
 import hashlib
-
+# in this code, we use the following link:
+# https://www.oreilly.com/library/view/programming-bitcoin/9781492031482/ch04.html
 
 # hash160
 def hash160(s):
@@ -220,8 +221,8 @@ class S256Field(FieldElement):
         return self**((P + 1) // 4)
 
 
-
-
+def encode_base58_checksum(b):
+    return encode_base58(b + hash256(b)[:4])
 
 # point on secp256k1 curve
 class S256Point(Point):
@@ -238,8 +239,11 @@ class S256Point(Point):
             return 'S256Point(infinity)'
         else:
             return 'S256Point({}, {})'.format(self.x, self.y)
+        
+    def hash160(self, compressed=True):
+        return hash160(self.sec(compressed))        
 
-# speeding up the scalar multiplication by modding with the group order
+    # speeding up the scalar multiplication by modding with the group order
     def __rmul__(self, coefficient):
         coef = coefficient % N  # mod by group order does the same thing
         return super().__rmul__(coef)
@@ -266,9 +270,17 @@ class S256Point(Point):
 
         # To check that it works OK, you can code a parser for a SEC format
         # Then you go from a point to sec and back; if you get the same point you're good
+        
+        '''returns the binary version of the SEC format'''
+        if compressed:
+            if self.y.num % 2 == 0:
+                return b'\x02' + self.x.num.to_bytes(32, 'big')
+            else:
+                return b'\x03' + self.x.num.to_bytes(32, 'big')
+        return b'\x04' + self.x.num.to_bytes(32, 'big') + \
+            self.y.num.to_bytes(32, 'big')
 
-
-        return b'Not really!'
+        #return b'Not really!'
 
 
     # compute a Bitcoin address from public key in SEC format
@@ -276,7 +288,15 @@ class S256Point(Point):
         '''Returns the address string'''
         # The compressed parameter tells us if we want compressed or uncompressed SEC
         # The testnet parameter tells us whether we want a testnet of mainnet address
-        return hash256(b'Not really!')
+        '''Returns the address string'''
+        h160 = self.hash160(compressed)
+        if testnet:
+            prefix = b'\x6f'
+        else:
+            prefix = b'\x00'
+        return encode_base58_checksum(prefix + h160)
+        
+        #return hash256(b'Not really!')
 
 
 
@@ -298,7 +318,21 @@ class Signature:
     # DER fromat of a raw signature
     # You just return bytes (as usual)
     def der(self):
-        return hash256(b'Not really!')       
+        rbin = self.r.to_bytes(32, byteorder='big')
+        # remove all null bytes at the beginning
+        rbin = rbin.lstrip(b'\x00')
+        # if rbin has a high bit, add a \x00
+        if rbin[0] & 0x80:
+            rbin = b'\x00' + rbin
+        result = bytes([2, len(rbin)]) + rbin
+        sbin = self.s.to_bytes(32, byteorder='big')
+        # remove all null bytes at the beginning
+        sbin = sbin.lstrip(b'\x00')
+        # if sbin has a high bit, add a \x00
+        if sbin[0] & 0x80:
+            sbin = b'\x00' + sbin
+        result += bytes([2, len(sbin)]) + sbin
+        return bytes([0x30, len(result)]) + result      
 
 
 
