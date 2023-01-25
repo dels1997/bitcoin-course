@@ -121,3 +121,15 @@ Tx hash: '2c3b06cde523bba65d296c27f69142e14a62c934cf791ec99adf79a0e48f67de'
 Tx: '0100000001de678fe4a079df9ac91e79cf34c9624ae14291f6276c295da6bb23e5cd063b2c0100000084473044022069a3696e92dd2e865a884553d8a875b8aeb0f5af4c6afdfb667da45752f6ba11022022ba385f624e2572ad3285a585ea797181b5cf7f3f104c496f6ce858854129e80121034ac57dc4d3d16fdaef19a7fc4478f61fa030df945d2537a243845e3b7ca32d531976a914dde91f050aafdaad45c5ef8cdc5c66f2d58d52a888acffffffff0196000000000000001976a91459cada50314c829e19f5a7786f8ee0d4987f429d88ac00000000'
 
 Tx hash: '04d95dbeaaaa425adca123428e0a520978b859646195a5f35c0daddc34c6e484'
+
+----------------------------------------------------------------------------------------------------------------------------
+## HW3:
+
+### Regular part
+
+#### Part 1
+
+All the relevant information for first 20 blocks of Bitcoin testnet is in file out.txt.
+
+#### Part 2
+Printed error is in file out_error.txt. Explanation: if we add the command print(prev_tx.hex()) in parse method of class TxIn, we see that for all first transactions in block, value of previous transaction hash is all zeros, i.e. not a valid transaction hash and thus the transaction cannot be verified.
