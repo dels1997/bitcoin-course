@@ -1,0 +1,33 @@
+ValueError: non-hexadecimal number found in fromhex() arg at position 0
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "c:\Users\dels\Desktop\Računarstvo i matematika\2. godina\pcp\hw4\code\network.py", line 527, in <module>
+    print(tx.verify())
+          ^^^^^^^^^^^
+  File "c:\Users\dels\Desktop\Računarstvo i matematika\2. godina\pcp\hw4\code\txP2PKH.py", line 245, in verify
+    if self.fee() < 0:
+       ^^^^^^^^^^
+  File "c:\Users\dels\Desktop\Računarstvo i matematika\2. godina\pcp\hw4\code\txP2PKH.py", line 178, in fee
+    input_sum += tx_in.value(self.testnet)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\dels\Desktop\Računarstvo i matematika\2. godina\pcp\hw4\code\txP2PKH.py", line 325, in value
+    tx = self.fetch_tx(testnet=testnet)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\dels\Desktop\Računarstvo i matematika\2. godina\pcp\hw4\code\txP2PKH.py", line 318, in fetch_tx
+    return TxFetcher.fetch(self.prev_tx.hex(), testnet=testnet)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\dels\Desktop\Računarstvo i matematika\2. godina\pcp\hw4\code\txP2PKH.py", line 40, in fetch
+    raise ValueError('unexpected response: {}'.format(response.text))
+ValueError: unexpected response: <html>
+<head><title>502 Bad Gateway</title></head>
+<body>
+<center><h1>502 Bad Gateway</h1></center>
+<hr><center>nginx/1.21.6</center>
+</body>
+</html>
+
+--------------------------------------------------------------------------------
+explanation:
+if we add the command print(prev_tx.hex()) in parse method of class TxIn, we see that for all first transactions in block, value of previous transaction hash is all zeros, i.e. not a valid transaction hash and thus the transaction cannot be verified
