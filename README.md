@@ -129,7 +129,12 @@ Tx hash: '04d95dbeaaaa425adca123428e0a520978b859646195a5f35c0daddc34c6e484'
 
 #### Part 1
 
-All the relevant data for first 20 blocks of Bitcoin testnet is in file out.txt. Problem was solved by finding hashes of first 20 blocks manually and then using getdata message to get total block data, from which the data was printed.
+All the relevant data for first 20 blocks of Bitcoin testnet is in file out.txt. Problem was solved by finding hashes of first 20 blocks manually and then using getdata message to get total block data, from which the data was printed. This was done by running the network.py script.
 
 #### Part 2
 Printed error is in file out_error.txt. Explanation: if we add the command print(prev_tx.hex()) in parse method of class TxIn, we see that for all first transactions in block, value of previous transaction hash is all zeros, i.e. not a valid transaction hash and thus the transaction cannot be verified.
+
+### Bonus part
+
+#### Part 1
+All the relevant data for first 20 blocks of Bitcoin mainnet for three nodes is in files out1.txt, out2.txt and out3.txt. Problem was solved by finding hashes of first 20 blocks manually and then using getdata messages to get total block data, from which the data was printed. This was done by running the network.py script.
